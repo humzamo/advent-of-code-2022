@@ -13,11 +13,8 @@ func main() {
 	numberList := loadNumbersList("Input.txt")
 	caloriesList := caloriesList(numberList)
 
-	partOneAnswer := partOne(caloriesList)
-	fmt.Println("The answer to part one is:", partOneAnswer)
-
-	partTwoAnswer := partTwo(caloriesList)
-	fmt.Println("The answer to part one is:", partTwoAnswer)
+	fmt.Println("The answer to part one is:", topCalories(caloriesList, 1))
+	fmt.Println("The answer to part one is:", topCalories(caloriesList, 3))
 }
 
 func loadNumbersList(inputFileName string) []int {
@@ -55,23 +52,17 @@ func caloriesList(list []int) []int {
 		}
 		sum += num
 	}
+
+	sort.Slice(calories, func(i, j int) bool {
+		return calories[i] > calories[j]
+	})
 	return calories
 }
 
-// calculate max of calories list
-func partOne(list []int) int {
-	m := 0
-	for i, e := range list {
-		if i == 0 || e > m {
-			m = e
-		}
+func topCalories(list []int, limit int) int {
+	sum := 0
+	for i := 0; i < limit; i++ {
+		sum += list[i]
 	}
-	return m
-}
-
-// calculate sum of highest three calories
-func partTwo(list []int) int {
-	sort.Ints(list)
-	topThreeItems := list[len(list)-3:]
-	return topThreeItems[0] + topThreeItems[1] + topThreeItems[2]
+	return sum
 }
