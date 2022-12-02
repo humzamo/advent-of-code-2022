@@ -29,6 +29,10 @@ func loadInputList(inputFileName string) []string {
 	return inputList
 }
 
+// rock is represented by A or X
+// paper is represented by B or Y
+// scissors is represented by C or Z
+
 const (
 	rock     = 1
 	paper    = 2
@@ -38,6 +42,8 @@ const (
 	win      = 6
 )
 
+// score is the hand we have (second letter)
+// plus the result of the round (first letter vs second letter)
 var partOnestrategyToScore = map[string]int{
 	"A X": rock + draw,
 	"A Y": paper + win,
@@ -50,6 +56,8 @@ var partOnestrategyToScore = map[string]int{
 	"C Z": scissors + draw,
 }
 
+// score is the result of the round (second letter)
+// plus the hand we need to achieve the result against the first hand/letter
 var partTwoStrategyToScore = map[string]int{
 	"A X": scissors + loss,
 	"A Y": rock + draw,
