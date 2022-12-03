@@ -14,7 +14,7 @@ func main() {
 	caloriesList := caloriesList(numberList)
 
 	fmt.Println("The answer to part one is:", topCalories(caloriesList, 1))
-	fmt.Println("The answer to part one is:", topCalories(caloriesList, 3))
+	fmt.Println("The answer to part two is:", topCalories(caloriesList, 3))
 }
 
 func loadNumbersList(inputFileName string) []int {

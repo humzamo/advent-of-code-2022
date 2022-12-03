@@ -11,7 +11,7 @@ func main() {
 	inputList := loadInputList("Input.txt")
 
 	fmt.Println("The answer to part one is:", calculateScore(inputList, partOnestrategyToScore))
-	fmt.Println("The answer to part one is:", calculateScore(inputList, partTwoStrategyToScore))
+	fmt.Println("The answer to part two is:", calculateScore(inputList, partTwoStrategyToScore))
 }
 
 func loadInputList(inputFileName string) []string {
