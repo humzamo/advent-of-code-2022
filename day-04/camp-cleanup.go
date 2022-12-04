@@ -12,7 +12,7 @@ func main() {
 	assignmentList := parseAssignments(inputList)
 
 	fmt.Println("The answer to part one is:", partOne(assignmentList))
-	// fmt.Println("The answer to part two is:", partTwo(inputList))
+	fmt.Println("The answer to part two is:", partTwo(assignmentList))
 }
 
 func loadInputList(inputFileName string) []string {
@@ -73,16 +73,28 @@ func parseAssignments(input []string) [][]assignment {
 func partOne(assignmentList [][]assignment) int {
 	sum := 0
 	for _, assignments := range assignmentList {
-		if assignments[1].start <= assignments[0].start && assignments[0].end <= assignments[1].end {
-			sum++
-			continue
-		}
-
+		// if first assignment is contained in second assignment
 		if assignments[0].start <= assignments[1].start && assignments[1].end <= assignments[0].end {
 			sum++
 			continue
 		}
-	}
 
+		// if second assignment is contained in first assignment
+		if assignments[1].start <= assignments[0].start && assignments[0].end <= assignments[1].end {
+			sum++
+			continue
+		}
+	}
+	return sum
+}
+
+func partTwo(assignmentList [][]assignment) int {
+	sum := 0
+	for _, assignments := range assignmentList {
+		// if there is any overlap between assignments
+		if assignments[0].end >= assignments[1].start && assignments[1].end >= assignments[0].start {
+			sum++
+		}
+	}
 	return sum
 }
