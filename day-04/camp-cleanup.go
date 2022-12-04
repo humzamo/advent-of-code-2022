@@ -3,8 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -18,18 +16,24 @@ func main() {
 }
 
 func loadInputList(inputFileName string) []string {
-	file, err := os.Open(inputFileName)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// file, err := os.Open(inputFileName)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	reader := strings.NewReader(`2-4,6-8
+	2-3,4-5
+	5-7,7-9
+	2-8,3-7
+	6-6,4-6
+	2-6,4-8`)
 
 	var inputList []string
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		inputList = append(inputList, scanner.Text())
 	}
 
-	defer file.Close()
+	// defer file.Close()
 	return inputList
 }
 
@@ -41,6 +45,7 @@ type assignment struct {
 func parseAssignments(input []string) [][]assignment {
 	assignmentsList := [][]assignment{}
 	for _, s := range input {
+		s = strings.TrimSpace(s)
 		splitString := strings.Split(s, ",")
 		assignment1Strings := strings.Split(splitString[0], "-")
 		assignment2Strings := strings.Split(splitString[1], "-")
@@ -68,12 +73,12 @@ func parseAssignments(input []string) [][]assignment {
 func partOne(assignmentList [][]assignment) int {
 	sum := 0
 	for _, assignments := range assignmentList {
-		if assignments[0].start <= assignments[1].start && assignments[0].end <= assignments[1].end {
+		if assignments[1].start <= assignments[0].start && assignments[0].end <= assignments[1].end {
 			sum++
 			continue
 		}
 
-		if assignments[1].start <= assignments[0].start && assignments[1].end <= assignments[0].end {
+		if assignments[0].start <= assignments[1].start && assignments[1].end <= assignments[0].end {
 			sum++
 			continue
 		}
