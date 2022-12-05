@@ -12,15 +12,18 @@ import (
 
 func main() {
 	inputList1, inputList2 := loadInputList("Input.txt")
-
-	initialStack := parseInitialStack(inputList1)
 	transformations := parseTransformations(inputList2)
 
-	fmt.Println(initialStack)
-	fmt.Println(transformations)
+	fmt.Println("The answer to part one is:", calculateAnswer(parseInitialStack(inputList1), transformations, partOne))
+	fmt.Println("The answer to part two is:", calculateAnswer(parseInitialStack(inputList1), transformations, partTwo))
+}
 
-	// fmt.Println("The answer to part one is:", partOne(assignmentList))
-	// fmt.Println("The answer to part two is:", partTwo(assignmentList))
+type stack map[string][]string
+
+type transformation struct {
+	count int
+	from  string
+	to    string
 }
 
 func loadInputList(inputFileName string) ([]string, []string) {
@@ -48,13 +51,40 @@ func loadInputList(inputFileName string) ([]string, []string) {
 	return inputList, transformationList
 }
 
-// Eg 1: A B C
-type stack map[string][]string
+func calculateAnswer(stack stack, transformations []transformation, moveBlocks func(stack *stack, t transformation, blocks *[]string)) string {
+	for _, t := range transformations {
+		blocks := stack[t.from][len(stack[t.from])-t.count:]
+		currentFrom := stack[t.from]
+		stack[t.from] = currentFrom[:len(currentFrom)-t.count]
 
-type transformation struct {
-	count int
-	from  string
-	to    string
+		moveBlocks(&stack, t, &blocks)
+	}
+
+	return stackTops(stack)
+}
+
+// move each block one at a time
+func partOne(stack *stack, t transformation, blocks *[]string) {
+	for i := t.count - 1; 0 <= i; i-- {
+		currentTo := (*stack)[t.to]
+		(*stack)[t.to] = append(currentTo, (*blocks)[i])
+	}
+}
+
+// move each chunk of blocks in one go
+func partTwo(stack *stack, t transformation, blocks *[]string) {
+	currentTo := (*stack)[t.to]
+	(*stack)[t.to] = append(currentTo, *blocks...)
+}
+
+// returns the top block of each stack in order
+func stackTops(stack stack) string {
+	result := ""
+	for i := 1; i < len(stack)+1; i++ {
+		key := strconv.Itoa(i)
+		result += stack[key][len(stack[key])-1]
+	}
+	return result
 }
 
 func parseTransformations(input []string) []transformation {
@@ -82,7 +112,7 @@ func parseInitialStack(input []string) stack {
 	transposed := transpose(original)
 	for _, s := range transposed {
 		arr := []string{}
-		for i := len(s) - 2; i > 0; i-- {
+		for i := len(s) - 2; i >= 0; i-- {
 			if s[i] == "" {
 				break
 			}
