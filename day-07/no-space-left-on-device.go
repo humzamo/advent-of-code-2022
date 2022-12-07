@@ -11,9 +11,6 @@ import (
 
 func main() {
 	inputList := loadInputList("Input.txt")
-	// fmt.Println(inputList)
-	// assignmentList := parseAssignments(inputList)
-
 	tree := parseDirectory(inputList)
 	fmt.Println(tree)
 
@@ -44,32 +41,28 @@ type file struct {
 
 type directory struct {
 	name        string
-	parentName  string
+	parent      *directory
 	files       []file
 	directories []*directory
 }
 
 func parseDirectory(input []string) directory {
-	d := directory{
+	// start off at the root
+	currentDir := &directory{
 		name: "/",
 	}
-	currentDir := &d
-	tempDir := &directory{}
 
 	for i, s := range input {
 		if i == 0 {
 			continue
 		}
-		// fmt.Println(d.files)
-		// if the line is an instruction
-		if s[0:4] == "$ cd" {
-			currentDir = currentDir.insert(tempDir)
-			tempDir = &directory{}
 
-			if s[4:6] == ".." {
-				currentDir = currentDir.findNode(currentDir.parentName)
+		// either cd back one directory or go in one lever
+		if s[0:4] == "$ cd" {
+			if (s[5:]) == ".." {
+				currentDir = currentDir.parent
 			} else {
-				currentDir = currentDir.findNode(s[5:])
+				currentDir = currentDir.moveIntoDirectory(s[5:])
 			}
 			continue
 		}
@@ -80,45 +73,40 @@ func parseDirectory(input []string) directory {
 		}
 
 		splitString := strings.Split(s, " ")
-		// fmt.Println(splitString)
 		if splitString[0] == "dir" {
-			dirs := tempDir.directories
-			tempDir.directories = append(dirs, &directory{
-				name:       splitString[1],
-				parentName: currentDir.name,
+			dirs := currentDir.directories
+			currentDir.directories = append(dirs, &directory{
+				name:   splitString[1],
+				parent: currentDir,
 			})
 		} else {
 			size, _ := strconv.Atoi(splitString[0])
-			files := tempDir.files
-			tempDir.files = append(files, file{
+			files := currentDir.files
+			currentDir.files = append(files, file{
 				name: splitString[1],
 				size: size,
 			})
 		}
-		fmt.Println(tempDir)
 	}
+	currentDir = currentDir.goToRoot()
 	return *currentDir
 }
 
-func (root *directory) insert(d *directory) *directory {
-	initialDir := root.directories
-	root.directories = append(initialDir, d)
-
-	initialFiles := root.files
-	root.files = append(initialFiles, d.files...)
-	return root
+func (d *directory) moveIntoDirectory(name string) *directory {
+	for _, directory := range d.directories {
+		if directory.name == name {
+			return directory
+		}
+	}
+	return nil
 }
 
-func (node *directory) findNode(dirName string) *directory {
-	if node == nil {
-		return nil
+func (d *directory) goToRoot() *directory {
+	for {
+		if d.parent == nil {
+			return d
+		}
+		d = d.parent
+		d.goToRoot()
 	}
-	if node.name == dirName {
-		return node
-	}
-	for _, child := range node.directories {
-		child.findNode(dirName)
-	}
-
-	return node
 }
