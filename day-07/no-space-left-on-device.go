@@ -14,32 +14,16 @@ func main() {
 	inputList := loadInputList("Input.txt")
 	tree := parseDirectory(inputList)
 	tree.sumDirectory()
-	// fmt.Println("used space:", tree.size)
-
-	// fmt.Println(tree)
 
 	fmt.Println("The answer to part one is:", tree.partOne())
-	// fmt.Println("unused space:", totalDiskSpace-tree.size)
-
-	// tree.partTwo()
-	// fmt.Println(validDirectories)
-
-	// sort.Slice(validDirectories, func(i, j int) bool {
-	// 	return validDirectories[i] < validDirectories[j]
-	// })
-	// fmt.Println(validDirectories)
-
 	fmt.Println("The answer to part two is:", tree.partTwo())
 
 }
 
 const (
+	directoryLimit    = 100000
 	totalDiskSpace    = 70000000
 	requiredDiskSpace = 30000000
-	// totalUsedSpace    = 42677139
-	// totalUsedSpace = 48381165 // example
-	// totalUnusedSpace = 21618835 //example
-	// totalUnusedSpace = 27322861
 )
 
 func loadInputList(inputFileName string) []string {
@@ -113,8 +97,8 @@ func parseDirectory(input []string) directory {
 			})
 		}
 	}
-	currentDir = currentDir.goToRoot()
-	return *currentDir
+	// currentDir = currentDir.goToRoot()
+	return *currentDir.goToRoot()
 }
 
 func (d *directory) moveIntoDirectory(name string) *directory {
@@ -166,7 +150,7 @@ func (d *directory) sumDirectory() int {
 func (d *directory) partOne() int {
 	sum := 0
 	for _, directory := range d.directories {
-		if directory.size <= 100000 {
+		if directory.size <= directoryLimit {
 			sum += directory.size
 		}
 		if directory.directories != nil {
