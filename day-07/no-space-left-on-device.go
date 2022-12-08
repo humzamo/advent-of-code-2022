@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -13,16 +14,32 @@ func main() {
 	inputList := loadInputList("Input.txt")
 	tree := parseDirectory(inputList)
 	tree.sumDirectory()
+	// fmt.Println("used space:", tree.size)
 
-	fmt.Println(tree)
+	// fmt.Println(tree)
 
 	fmt.Println("The answer to part one is:", tree.partOne())
-	// fmt.Println("The answer to part two is:", partTwo(assignmentList))
+	// fmt.Println("unused space:", totalDiskSpace-tree.size)
+
+	// tree.partTwo()
+	// fmt.Println(validDirectories)
+
+	// sort.Slice(validDirectories, func(i, j int) bool {
+	// 	return validDirectories[i] < validDirectories[j]
+	// })
+	// fmt.Println(validDirectories)
+
+	fmt.Println("The answer to part two is:", tree.partTwo())
+
 }
 
 const (
 	totalDiskSpace    = 70000000
 	requiredDiskSpace = 30000000
+	// totalUsedSpace    = 42677139
+	// totalUsedSpace = 48381165 // example
+	// totalUnusedSpace = 21618835 //example
+	// totalUnusedSpace = 27322861
 )
 
 func loadInputList(inputFileName string) []string {
@@ -157,4 +174,28 @@ func (d *directory) partOne() int {
 		}
 	}
 	return sum
+}
+
+var validDirectories = []int{}
+
+func (d *directory) calculateValidDirectories(totalUnusedSpace int) []int {
+	for _, directory := range d.directories {
+		if totalUnusedSpace+directory.size >= requiredDiskSpace {
+			validDirectories = append(validDirectories, directory.size)
+		}
+		if directory.directories != nil {
+			directory.calculateValidDirectories(totalUnusedSpace)
+		}
+	}
+	return validDirectories
+}
+
+func (d *directory) partTwo() int {
+	totalUnusedSpace := totalDiskSpace - d.size
+	directories := d.calculateValidDirectories(totalUnusedSpace)
+
+	sort.Slice(directories, func(i, j int) bool {
+		return directories[i] < directories[j]
+	})
+	return directories[0]
 }
