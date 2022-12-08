@@ -12,11 +12,18 @@ import (
 func main() {
 	inputList := loadInputList("Input.txt")
 	tree := parseDirectory(inputList)
+	tree.sumDirectory()
+
 	fmt.Println(tree)
 
-	// fmt.Println("The answer to part one is:", partOne(assignmentList))
+	fmt.Println("The answer to part one is:", tree.partOne())
 	// fmt.Println("The answer to part two is:", partTwo(assignmentList))
 }
+
+const (
+	totalDiskSpace    = 70000000
+	requiredDiskSpace = 30000000
+)
 
 func loadInputList(inputFileName string) []string {
 	file, err := os.Open(inputFileName)
@@ -44,6 +51,7 @@ type directory struct {
 	parent      *directory
 	files       []file
 	directories []*directory
+	size        int
 }
 
 func parseDirectory(input []string) directory {
@@ -57,7 +65,7 @@ func parseDirectory(input []string) directory {
 			continue
 		}
 
-		// either cd back one directory or go in one lever
+		// either go back one level to the parent or go in one level
 		if s[0:4] == "$ cd" {
 			if (s[5:]) == ".." {
 				currentDir = currentDir.parent
@@ -109,4 +117,44 @@ func (d *directory) goToRoot() *directory {
 		d = d.parent
 		d.goToRoot()
 	}
+}
+
+func (d *directory) directorySize() int {
+	for _, directory := range d.directories {
+		if directory.directories == nil {
+			size := 0
+			for _, f := range directory.files {
+				size += f.size
+			}
+			directory.size = size
+		}
+		directory.size += directory.directorySize()
+	}
+	return d.size
+}
+
+func (d *directory) sumDirectory() int {
+	sum := 0
+	for _, f := range d.files {
+		sum += f.size
+	}
+	d.size += sum
+	for _, folder := range d.directories {
+		d.size += folder.sumDirectory()
+	}
+
+	return d.size
+}
+
+func (d *directory) partOne() int {
+	sum := 0
+	for _, directory := range d.directories {
+		if directory.size <= 100000 {
+			sum += directory.size
+		}
+		if directory.directories != nil {
+			sum += directory.partOne()
+		}
+	}
+	return sum
 }
