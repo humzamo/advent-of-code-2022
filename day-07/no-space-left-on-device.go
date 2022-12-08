@@ -13,7 +13,6 @@ import (
 func main() {
 	inputList := loadInputList("Input.txt")
 	tree := parseDirectory(inputList)
-	tree.sumDirectory()
 
 	fmt.Println("The answer to part one is:", tree.partOne())
 	fmt.Println("The answer to part two is:", tree.partTwo())
@@ -25,6 +24,23 @@ const (
 	totalDiskSpace    = 70000000
 	requiredDiskSpace = 30000000
 )
+
+var (
+	validDirectories = []int{}
+)
+
+type file struct {
+	name string
+	size int
+}
+
+type directory struct {
+	name        string
+	parent      *directory
+	files       []file
+	directories []*directory
+	size        int
+}
 
 func loadInputList(inputFileName string) []string {
 	file, err := os.Open(inputFileName)
@@ -42,19 +58,6 @@ func loadInputList(inputFileName string) []string {
 	return inputList
 }
 
-type file struct {
-	name string
-	size int
-}
-
-type directory struct {
-	name        string
-	parent      *directory
-	files       []file
-	directories []*directory
-	size        int
-}
-
 func parseDirectory(input []string) directory {
 	// start off at the root
 	currentDir := &directory{
@@ -62,16 +65,18 @@ func parseDirectory(input []string) directory {
 	}
 
 	for i, s := range input {
+		// skip the first iteration as we've already added the root directory
 		if i == 0 {
 			continue
 		}
 
 		// either go back one level to the parent or go in one level
 		if s[0:4] == "$ cd" {
-			if (s[5:]) == ".." {
+			directoryName := s[5:]
+			if directoryName == ".." {
 				currentDir = currentDir.parent
 			} else {
-				currentDir = currentDir.moveIntoDirectory(s[5:])
+				currentDir = currentDir.enterDirectory(directoryName)
 			}
 			continue
 		}
@@ -83,25 +88,47 @@ func parseDirectory(input []string) directory {
 
 		splitString := strings.Split(s, " ")
 		if splitString[0] == "dir" {
-			dirs := currentDir.directories
-			currentDir.directories = append(dirs, &directory{
+			currentDir.directories = append(currentDir.directories, &directory{
 				name:   splitString[1],
 				parent: currentDir,
 			})
 		} else {
 			size, _ := strconv.Atoi(splitString[0])
-			files := currentDir.files
-			currentDir.files = append(files, file{
+			currentDir.files = append(currentDir.files, file{
 				name: splitString[1],
 				size: size,
 			})
 		}
 	}
-	// currentDir = currentDir.goToRoot()
-	return *currentDir.goToRoot()
+	currentDir = currentDir.goToRoot()
+	currentDir.sumDirectory()
+	return *currentDir
 }
 
-func (d *directory) moveIntoDirectory(name string) *directory {
+func (d *directory) partOne() int {
+	sum := 0
+	for _, directory := range d.directories {
+		if directory.size <= directoryLimit {
+			sum += directory.size
+		}
+		if directory.directories != nil {
+			sum += directory.partOne()
+		}
+	}
+	return sum
+}
+
+func (d *directory) partTwo() int {
+	totalUnusedSpace := totalDiskSpace - d.size
+	d.calculateValidDirectories(totalUnusedSpace)
+
+	sort.Slice(validDirectories, func(i, j int) bool {
+		return validDirectories[i] < validDirectories[j]
+	})
+	return validDirectories[0]
+}
+
+func (d *directory) enterDirectory(name string) *directory {
 	for _, directory := range d.directories {
 		if directory.name == name {
 			return directory
@@ -120,26 +147,12 @@ func (d *directory) goToRoot() *directory {
 	}
 }
 
-func (d *directory) directorySize() int {
-	for _, directory := range d.directories {
-		if directory.directories == nil {
-			size := 0
-			for _, f := range directory.files {
-				size += f.size
-			}
-			directory.size = size
-		}
-		directory.size += directory.directorySize()
-	}
-	return d.size
-}
-
+// calculates the size of each directory in the tree
 func (d *directory) sumDirectory() int {
-	sum := 0
 	for _, f := range d.files {
-		sum += f.size
+		d.size += f.size
 	}
-	d.size += sum
+
 	for _, folder := range d.directories {
 		d.size += folder.sumDirectory()
 	}
@@ -147,22 +160,7 @@ func (d *directory) sumDirectory() int {
 	return d.size
 }
 
-func (d *directory) partOne() int {
-	sum := 0
-	for _, directory := range d.directories {
-		if directory.size <= directoryLimit {
-			sum += directory.size
-		}
-		if directory.directories != nil {
-			sum += directory.partOne()
-		}
-	}
-	return sum
-}
-
-var validDirectories = []int{}
-
-func (d *directory) calculateValidDirectories(totalUnusedSpace int) []int {
+func (d *directory) calculateValidDirectories(totalUnusedSpace int) {
 	for _, directory := range d.directories {
 		if totalUnusedSpace+directory.size >= requiredDiskSpace {
 			validDirectories = append(validDirectories, directory.size)
@@ -171,15 +169,4 @@ func (d *directory) calculateValidDirectories(totalUnusedSpace int) []int {
 			directory.calculateValidDirectories(totalUnusedSpace)
 		}
 	}
-	return validDirectories
-}
-
-func (d *directory) partTwo() int {
-	totalUnusedSpace := totalDiskSpace - d.size
-	directories := d.calculateValidDirectories(totalUnusedSpace)
-
-	sort.Slice(directories, func(i, j int) bool {
-		return directories[i] < directories[j]
-	})
-	return directories[0]
 }
